@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'model_download_provider.dart';
+part of 'llm_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$modelDownloadNotifierHash() =>
-    r'8a271d4f89a34f84131c6bc9106200e04b720ca3';
+String _$llmServiceNotifierHash() =>
+    r'1e8b1de21882e68bc20f282d051960aee6735998';
 
-/// See also [ModelDownloadNotifier].
-@ProviderFor(ModelDownloadNotifier)
-final modelDownloadNotifierProvider =
-    AutoDisposeNotifierProvider<ModelDownloadNotifier, double>.internal(
-  ModelDownloadNotifier.new,
-  name: r'modelDownloadNotifierProvider',
+/// See also [LlmServiceNotifier].
+@ProviderFor(LlmServiceNotifier)
+final llmServiceNotifierProvider =
+    AsyncNotifierProvider<LlmServiceNotifier, LlmService>.internal(
+  LlmServiceNotifier.new,
+  name: r'llmServiceNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$modelDownloadNotifierHash,
+      : _$llmServiceNotifierHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ModelDownloadNotifier = AutoDisposeNotifier<double>;
+typedef _$LlmServiceNotifier = AsyncNotifier<LlmService>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
