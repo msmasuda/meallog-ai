@@ -16,9 +16,9 @@ class SuggestionScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('AI献立提案')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Center(
           child: suggestionAsync.when(
             data: (text) => Column(
               mainAxisSize: MainAxisSize.min,
@@ -87,3 +87,4 @@ class SuggestionScreen extends ConsumerWidget {
     );
   }
 }
+

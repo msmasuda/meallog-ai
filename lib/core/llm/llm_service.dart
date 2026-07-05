@@ -9,7 +9,7 @@ class LlmService {
     final engine = LlamaEngine(LlamaBackend());
     await engine.loadModel(
       modelPath,
-      modelParams: const ModelParams(contextSize: 2048, gpuLayers: 20),
+      modelParams: const ModelParams(contextSize: 2048, gpuLayers: 0),
     );
     _engine = engine;
   }
@@ -28,17 +28,9 @@ class LlmService {
     required List<String> recentMeals,
     String mealType = '夕食',
   }) {
-    final historyText = recentMeals.join('、');
-    return '''
-あなたは献立提案アシスタントです。以下の直近の献立履歴を見て、
-同じ食材や調理法が続かないように、次の$mealType の献立を1つだけ提案してください。
-
-# 直近の献立履歴
-$historyText
-
-# 出力形式
-料理名だけを1行で答えてください。理由は不要です。
-''';
+    final historyText = recentMeals.isEmpty ? '（記録なし）' : recentMeals.join('、');
+    // ChatML format required by Qwen2.5-Instruct
+    return '<|im_start|>system\nあなたは献立提案アシスタントです。料理名だけを1行で答えてください。<|im_end|>\n<|im_start|>user\n直近の献立: $historyText\n次の$mealTypeを1つ提案してください。<|im_end|>\n<|im_start|>assistant\n';
   }
 
   Future<void> dispose() async {

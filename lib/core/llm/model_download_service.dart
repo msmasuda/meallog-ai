@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 
 class ModelDownloadService {
   static const kDefaultModelUrl =
-      'https://huggingface.co/bartowski/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf';
+      'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf';
 
-  static const _modelFileName = 'gemma-3-1b-it-Q4_K_M.gguf';
+  static const _modelFileName = 'qwen2.5-1.5b-instruct-q4_k_m.gguf';
 
   static String modelFilePath(String docsDir) => '$docsDir/$_modelFileName';
 

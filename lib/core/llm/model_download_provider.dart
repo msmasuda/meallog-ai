@@ -31,7 +31,7 @@ class ModelDownloadNotifier extends _$ModelDownloadNotifier {
       await ModelDownloadService.download(
         url: ModelDownloadService.kDefaultModelUrl,
         savePath: savePath,
-        onProgress: (p) => state = p,
+        onProgress: (p) { if (p < 1.0) state = p; },
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('model_ready', true);
