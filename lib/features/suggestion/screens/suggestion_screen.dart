@@ -1,9 +1,65 @@
+// lib/features/suggestion/screens/suggestion_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/suggestion_provider.dart';
+import '../widgets/streaming_text_widget.dart';
 
-class SuggestionScreen extends StatelessWidget {
+class SuggestionScreen extends ConsumerWidget {
   const SuggestionScreen({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('AI提案 (stub)')));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final suggestionAsync = ref.watch(mealSuggestionProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('AI献立提案')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: suggestionAsync.when(
+            data: (text) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '次の献立はこちら',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                StreamingTextWidget(text: text),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton.filled(
+                      icon: const Icon(Icons.thumb_up),
+                      tooltip: 'これにする',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(width: 16),
+                    IconButton.filled(
+                      icon: const Icon(Icons.thumb_down),
+                      tooltip: '別の提案',
+                      onPressed: () => ref.invalidate(mealSuggestionProvider),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            loading: () => const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('考え中...'),
+              ],
+            ),
+            error: (e, _) => Text(
+              'エラー: $e',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
