@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../shared_prefs_provider.dart';
 import 'app_shell.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/history/screens/history_screen.dart';
@@ -15,9 +15,9 @@ Future<GoRouter> appRouter(AppRouterRef ref) async {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) async {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPrefsProvider.future);
       final modelReady = prefs.getBool('model_ready') ?? false;
-      if (!modelReady && state.fullPath != '/model-setup') {
+      if (!modelReady && state.uri.path != '/model-setup') {
         return '/model-setup';
       }
       return null;
