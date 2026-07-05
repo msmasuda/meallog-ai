@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +21,13 @@ class ModelDownloadNotifier extends _$ModelDownloadNotifier {
     try {
       final docsDir = await getApplicationDocumentsDirectory();
       final savePath = ModelDownloadService.modelFilePath(docsDir.path);
+      final file = File(savePath);
+      if (await file.exists()) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('model_ready', true);
+        state = 1.0;
+        return;
+      }
       await ModelDownloadService.download(
         url: ModelDownloadService.kDefaultModelUrl,
         savePath: savePath,

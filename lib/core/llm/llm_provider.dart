@@ -17,4 +17,16 @@ class LlmServiceNotifier extends _$LlmServiceNotifier {
     ref.onDispose(service.dispose);
     return service;
   }
+
+  Future<void> retry() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final modelPath = ModelDownloadService.modelFilePath(docsDir.path);
+      final service = LlmService();
+      await service.loadModel(modelPath);
+      ref.onDispose(service.dispose);
+      return service;
+    });
+  }
 }
