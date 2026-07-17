@@ -53,9 +53,9 @@ engine.create(
 )
 ```
 
-このAPIはGGUFに埋め込まれたモデル自身のJinjaチャットテンプレートを自動適用するため、テンプレート形式を手動で当てにいく必要がない。返り値は`Stream<LlamaCompletionChunk>`(OpenAI形式のdelta)なので、`chunk.choices.first.delta.content`を取り出して既存の「累積文字列をStream<String>で流す」契約(`mealSuggestionProvider`が前提とする、各emitが全文であってdeltaでない)に変換する。
+このAPIはGGUFに埋め込まれたモデル自身のJinjaチャットテンプレートを自動適用するため、テンプレート形式を手動で当てにいく必要がない。返り値は`Stream<LlamaCompletionChunk>`(OpenAI形式のdelta)なので、`chunk.choices.first.delta.content`を取り出して**生のトークンdeltaとして**流す(`suggestNextMeal`と同じ契約)。`mealSuggestionProvider`側は既に`buffer.write(token)`でdeltaを累積して全文をyieldする実装になっている(CLAUDE.md記載)ため、`LlmService`側で先に累積してしまうと二重累積になる。したがって`suggestNextMealViaChat`は`suggestNextMeal`と同一の「delta単体を流す」契約を保つ。
 
-実装は`LlmService`に既存の`suggestNextMeal`/`buildPrompt`とは別のメソッド(例: `suggestNextMealViaChat`)として追加し、デフォルトモデル用の既存経路には触れない。呼び出し側(`mealSuggestionProvider`)の切り替えは実験ブランチ内でこの新メソッドを呼ぶよう一時的に変更する。
+実装は`LlmService`に既存の`suggestNextMeal`/`buildPrompt`とは別のメソッド(`suggestNextMealViaChat`、および`Stream<LlamaCompletionChunk>`からdeltaの`content`のみを取り出す静的ヘルパー`chatDeltaContent`)として追加し、デフォルトモデル用の既存経路には触れない。呼び出し側(`mealSuggestionProvider`)の切り替えは実験ブランチ内で`llmService.suggestNextMeal(...)`の呼び出しを`llmService.suggestNextMealViaChat(...)`に差し替えるだけで済む(累積ロジック自体は変更不要)。
 
 ## 成功基準
 
