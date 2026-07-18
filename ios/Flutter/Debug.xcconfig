@@ -1,2 +1,21 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// isar_flutter_libs' C API (e.g. isar_version) is only ever called via
+// dlsym(RTLD_DEFAULT, ...) from Dart FFI, never referenced from compiled
+// Swift/ObjC code, so the linker dead-strips it out of the statically
+// linked libisar.a (via Pods-Runner's `-l"isar"`) and dlsym fails at
+// runtime with "Failed to lookup symbol 'isar_version'". Force-load the
+// whole archive so every symbol survives into Runner's own binary. Points
+// at the plugin's own source copy of libisar.a (not the xcframework's
+// build-time copy under PODS_XCFRAMEWORKS_BUILD_DIR) because that copy is
+// produced by another target's script phase and the new Xcode build
+// system rejects referencing it directly as a linker input.
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load "$(PODS_ROOT)/../.symlinks/plugins/isar_flutter_libs/ios/isar.xcframework/ios-arm64/libisar.a"
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load "$(PODS_ROOT)/../.symlinks/plugins/isar_flutter_libs/ios/isar.xcframework/ios-arm64_x86_64-simulator/libisar.a"
+
+// DEAD_CODE_STRIPPING (Xcode default: YES) removes isar_version even
+// after force_load pulls it in, since nothing in compiled Swift/ObjC
+// references it (only dlsym does). Disable it so force_load's effect
+// actually survives into the final binary.
+DEAD_CODE_STRIPPING = NO
