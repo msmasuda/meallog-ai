@@ -19,4 +19,14 @@ void main() {
     final prompt = LlmService.buildPrompt(recentMeals: ['そば']);
     expect(prompt, contains('夕食'));
   });
+
+  test('buildPlainPrompt contains history and asks for one dish name', () {
+    final prompt = LlmService.buildPlainPrompt(
+      recentMeals: ['そば', 'カレー'],
+      mealType: '昼食',
+    );
+    expect(prompt, contains('そば、カレー'));
+    expect(prompt, contains('昼食'));
+    expect(prompt, contains('料理名だけを1行'));
+  });
 }
