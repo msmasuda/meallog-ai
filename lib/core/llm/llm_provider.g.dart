@@ -7,7 +7,7 @@ part of 'llm_provider.dart';
 // **************************************************************************
 
 String _$llmServiceNotifierHash() =>
-    r'61dffccfd915c9411cc9f0a01c3f85f0d784a722';
+    r'a403472aeac2ae84ae487572c9f5c26a35226005';
 
 /// See also [LlmServiceNotifier].
 @ProviderFor(LlmServiceNotifier)

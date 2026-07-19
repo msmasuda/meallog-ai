@@ -5,6 +5,7 @@ import '../../../core/llm/llm_provider.dart';
 import '../data/suggestion_model.dart';
 import '../providers/suggestion_provider.dart';
 import '../providers/suggestion_repo_provider.dart';
+import '../widgets/meal_illustration.dart';
 import '../widgets/streaming_text_widget.dart';
 
 class SuggestionScreen extends ConsumerWidget {
@@ -28,6 +29,8 @@ class SuggestionScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
+                MealIllustration(dishName: text),
+                const SizedBox(height: 24),
                 StreamingTextWidget(text: text),
                 const SizedBox(height: 32),
                 Row(
@@ -37,7 +40,8 @@ class SuggestionScreen extends ConsumerWidget {
                       icon: const Icon(Icons.thumb_up),
                       tooltip: 'これにする',
                       onPressed: () async {
-                        final repo = await ref.read(suggestionRepoProvider.future);
+                        final repo =
+                            await ref.read(suggestionRepoProvider.future);
                         final suggestion = Suggestion()
                           ..targetDate = DateTime.now()
                           ..mealType = '夕食'
@@ -74,9 +78,8 @@ class SuggestionScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => ref
-                      .read(llmServiceNotifierProvider.notifier)
-                      .retry(),
+                  onPressed: () =>
+                      ref.read(llmServiceNotifierProvider.notifier).retry(),
                   child: const Text('再試行'),
                 ),
               ],
@@ -87,4 +90,3 @@ class SuggestionScreen extends ConsumerWidget {
     );
   }
 }
-
