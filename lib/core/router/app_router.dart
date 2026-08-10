@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../shared_prefs_provider.dart';
 import '../llm/native_llm_bridge.dart';
+import '../llm/model_download_service.dart';
 import 'app_shell.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/history/screens/history_screen.dart';
@@ -17,7 +18,8 @@ Future<GoRouter> appRouter(AppRouterRef ref) async {
     initialLocation: '/',
     redirect: (context, state) async {
       final prefs = await ref.read(sharedPrefsProvider.future);
-      final modelReady = prefs.getBool('model_ready') ?? false;
+      final modelReady =
+          prefs.getBool(ModelDownloadService.modelReadyPreferenceKey) ?? false;
       final systemModelSupported = await NativeLlmBridge().isSupported();
       if (!systemModelSupported &&
           !modelReady &&

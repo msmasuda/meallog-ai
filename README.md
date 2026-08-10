@@ -19,8 +19,8 @@
 
 | プラットフォーム | 優先モデル | フォールバック |
 |---|---|---|
-| iOS | Apple Foundation Models | llamadart + Qwen2.5 GGUF |
-| Android | Gemini Nano（ML Kit Prompt API） | llamadart + Qwen2.5 GGUF |
+| iOS | Apple Foundation Models | llamadart + Qwen3.5 GGUF |
+| Android | Gemini Nano（ML Kit Prompt API） | llamadart + Qwen3.5 GGUF |
 
 ### iOS
 
@@ -37,7 +37,7 @@
 
 ### GGUFフォールバック
 
-初回起動時にQwen2.5-1.5B-Instruct Q4_K_M（約1GB）をダウンロードします。モデルはアプリのドキュメントディレクトリへ保存され、その後の推論はオフラインで動作します。
+GGUFフォールバックの全対象端末で、評価用にQwen3.5-0.8B Q4_K_M（約580MB）を初回起動時にダウンロードします。モデルはアプリのドキュメントディレクトリへ保存され、その後の推論はオフラインで動作します。Qwen3.5ではGGUFに埋め込まれたチャットテンプレートを利用し、献立提案では思考モードを無効にして料理名だけを生成します。
 
 ## 開発環境
 

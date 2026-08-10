@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 
 class ModelDownloadService {
-  static const kDefaultModelUrl =
-      'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf';
+  static const modelReadyPreferenceKey = 'model_ready_qwen3_5_0_8b_q4_k_m';
 
-  static const _modelFileName = 'qwen2.5-1.5b-instruct-q4_k_m.gguf';
+  static const kDefaultModelUrl =
+      'https://huggingface.co/bartowski/Qwen_Qwen3.5-0.8B-GGUF/resolve/main/Qwen_Qwen3.5-0.8B-Q4_K_M.gguf';
+
+  static const _modelFileName = 'qwen3.5-0.8b-q4_k_m.gguf';
 
   static String modelFilePath(String docsDir) => '$docsDir/$_modelFileName';
 

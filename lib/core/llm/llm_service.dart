@@ -34,9 +34,39 @@ class LlmService {
       return Stream.fromFuture(nativeBridge.generate(prompt));
     }
     if (_engine == null) throw StateError('モデルが未ロードです');
-    return _engine!.generate(
-      buildPrompt(recentMeals: recentMeals, mealType: mealType),
+    return chatDeltaContent(
+      _engine!.create(
+        buildChatMessages(recentMeals: recentMeals, mealType: mealType),
+        enableThinking: false,
+      ),
     );
+  }
+
+  static List<LlamaChatMessage> buildChatMessages({
+    required List<String> recentMeals,
+    String mealType = '夕食',
+  }) {
+    final historyText = recentMeals.isEmpty ? '（記録なし）' : recentMeals.join('、');
+    return [
+      const LlamaChatMessage.fromText(
+        role: LlamaChatRole.system,
+        text: 'あなたは献立提案アシスタントです。料理名だけを1行で答えてください。',
+      ),
+      LlamaChatMessage.fromText(
+        role: LlamaChatRole.user,
+        text: '直近の献立: $historyText\n重複を避けて、次の$mealTypeを1つ提案してください。',
+      ),
+    ];
+  }
+
+  static Stream<String> chatDeltaContent(
+    Stream<LlamaCompletionChunk> chunks,
+  ) async* {
+    await for (final chunk in chunks) {
+      if (chunk.choices.isEmpty) continue;
+      final content = chunk.choices.first.delta.content;
+      if (content != null && content.isNotEmpty) yield content;
+    }
   }
 
   static String buildPlainPrompt({
@@ -54,7 +84,8 @@ class LlmService {
     String mealType = '夕食',
   }) {
     final historyText = recentMeals.isEmpty ? '（記録なし）' : recentMeals.join('、');
-    // ChatML format required by Qwen2.5-Instruct
+    // Legacy helper retained for prompt-focused unit tests. GGUF inference uses
+    // buildChatMessages so the model's embedded chat template is applied.
     return '<|im_start|>system\nあなたは献立提案アシスタントです。料理名だけを1行で答えてください。<|im_end|>\n<|im_start|>user\n直近の献立: $historyText\n次の$mealTypeを1つ提案してください。<|im_end|>\n<|im_start|>assistant\n';
   }
 

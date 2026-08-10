@@ -31,11 +31,11 @@ Note the pinned `riverpod_generator: ^2.3.11` (not the latest 2.4.x): newer vers
 
 **Provider → Service split:** services (`LlmService`, `IsarService`, `ModelDownloadService`, repositories) are plain classes holding logic and are unit-testable in isolation. Riverpod providers wrap them, resolve async dependencies (file paths, DB handles), and manage lifecycle. `isar`, `llmServiceNotifier`, and `appRouter` are `keepAlive: true` singletons.
 
-**First-launch model gate:** the app cannot function until the ~1GB GGUF model is downloaded. `appRouter`'s `redirect` reads the `model_ready` bool from SharedPreferences and forces `/model-setup` until it's true. `ModelSetupScreen` drives `ModelDownloadNotifier.startDownload()`, which downloads from HuggingFace (`ModelDownloadService.kDefaultModelUrl`, Qwen2.5-1.5B-Instruct Q4_K_M) to the app documents dir, then sets `model_ready`. Only after that does `llmServiceNotifier` load the model into memory.
+**First-launch model gate:** the app cannot function until the ~580MB GGUF model is downloaded. `appRouter`'s `redirect` reads the model-specific readiness key from SharedPreferences and forces `/model-setup` until it's true. `ModelSetupScreen` drives `ModelDownloadNotifier.startDownload()`, which downloads from HuggingFace (`ModelDownloadService.kDefaultModelUrl`, Qwen3.5-0.8B Q4_K_M, temporarily used on all GGUF fallback devices for evaluation) to the app documents dir, then sets the readiness key. Only after that does `llmServiceNotifier` load the model into memory.
 
 **Suggestion streaming:** `LlmService.suggestNextMeal` returns a token `Stream<String>`. `mealSuggestionProvider` (a `Stream` provider) accumulates tokens into a growing cumulative string (buffer.toString() on each token) so the UI shows text building up live. Watch the accumulation semantics: each emit is the full text so far, not a delta.
 
-**LLM prompt:** `LlmService.buildPrompt` builds a **ChatML-formatted** prompt (`<|im_start|>...<|im_end|>`) required by Qwen2.5-Instruct. The model runs CPU-only (`gpuLayers: 0`) for simulator compatibility. If you change models, the prompt format likely must change too.
+**LLM prompt:** `LlmService.suggestNextMeal` uses llamadart's structured chat API so Qwen3.5's embedded GGUF chat template is applied, with thinking disabled. The model runs CPU-only (`gpuLayers: 0`) for simulator compatibility. If you change models, verify its embedded template and thinking behavior.
 
 **Error signaling via sentinels:** `ModelDownloadNotifier` uses a `double` state where `-1.0` means error (with details in `.error`), `0.0..1.0` is download progress. `LlmServiceNotifier` exposes a `retry()` to recover from a failed model load. Keep these conventions when editing the setup/download flow.
 

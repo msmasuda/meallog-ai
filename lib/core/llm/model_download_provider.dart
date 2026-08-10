@@ -24,17 +24,25 @@ class ModelDownloadNotifier extends _$ModelDownloadNotifier {
       final file = File(savePath);
       if (await file.exists()) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('model_ready', true);
+        await prefs.setBool(
+          ModelDownloadService.modelReadyPreferenceKey,
+          true,
+        );
         state = 1.0;
         return;
       }
       await ModelDownloadService.download(
         url: ModelDownloadService.kDefaultModelUrl,
         savePath: savePath,
-        onProgress: (p) { if (p < 1.0) state = p; },
+        onProgress: (p) {
+          if (p < 1.0) state = p;
+        },
       );
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('model_ready', true);
+      await prefs.setBool(
+        ModelDownloadService.modelReadyPreferenceKey,
+        true,
+      );
       state = 1.0;
     } catch (e) {
       _error = e.toString();
