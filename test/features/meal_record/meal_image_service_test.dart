@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
+import 'package:meallog_ai/features/meal_record/data/food_label_mapper.dart';
 import 'package:meallog_ai/features/meal_record/data/meal_image_service.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -11,52 +12,99 @@ void main() {
   });
 
   group('MealImageService', () {
-    late MockImageLabeler mockLabeler;
+    late MockImageLabeler mockFoodLabeler;
+    late MockImageLabeler mockBaseLabeler;
     late MealImageService service;
 
     setUp(() {
-      mockLabeler = MockImageLabeler();
-      service = MealImageService(labeler: mockLabeler);
+      mockFoodLabeler = MockImageLabeler();
+      mockBaseLabeler = MockImageLabeler();
+      service = MealImageService(
+        foodLabeler: mockFoodLabeler,
+        baseLabeler: mockBaseLabeler,
+      );
     });
 
-    test('analyzes image and returns mapped result when food labels detected', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer(
+    test('analyzes image and returns mapped result when food model detects specific dish', () async {
+      when(() => mockFoodLabeler.processImage(any())).thenAnswer(
         (_) async => [
-          ImageLabel(label: 'Curry', confidence: 0.95, index: 0),
-          ImageLabel(label: 'Rice', confidence: 0.88, index: 1),
+          ImageLabel(label: 'Yakisoba', confidence: 0.88, index: 475),
+        ],
+      );
+
+      final result = await service.analyzeImage('dummy/path/yakisoba.jpg');
+
+      expect(result, isNotNull);
+      expect(result!.isFoodOrDrink, isTrue);
+      expect(result.category, equals(FoodCategory.food));
+      expect(result.primaryDishName, equals('焼きそば'));
+      expect(result.candidates, contains('ソース焼きそば'));
+      expect(result.ingredients, contains('中華麺'));
+      expect(result.rawLabels.first.label, equals('Yakisoba'));
+    });
+
+    test('analyzes image and returns curry when food model detects curry', () async {
+      when(() => mockFoodLabeler.processImage(any())).thenAnswer(
+        (_) async => [
+          ImageLabel(label: 'Curry', confidence: 0.92, index: 123),
         ],
       );
 
       final result = await service.analyzeImage('dummy/path/curry.jpg');
 
       expect(result, isNotNull);
-      expect(result!.primaryDishName, equals('カレーライス'));
-      expect(result.candidates, contains('カレーライス'));
+      expect(result!.isFoodOrDrink, isTrue);
+      expect(result.category, equals(FoodCategory.food));
+      expect(result.primaryDishName, equals('カレーライス'));
+      expect(result.candidates, contains('キーマカレー'));
       expect(result.ingredients, contains('カレールー'));
-      expect(result.rawLabels.length, equals(2));
-      expect(result.rawLabels.first.label, equals('Curry'));
     });
 
-    test('returns null when no labels detected', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer((_) async => []);
+    test('returns null when neither model detects any labels', () async {
+      when(() => mockFoodLabeler.processImage(any())).thenAnswer((_) async => []);
+      when(() => mockBaseLabeler.processImage(any())).thenAnswer((_) async => []);
 
       final result = await service.analyzeImage('dummy/path/empty.jpg');
 
       expect(result, isNull);
     });
 
-    test('falls back to top label when no dictionary match is found', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer(
+    test('falls back to base model for beverage like coffee', () async {
+      when(() => mockFoodLabeler.processImage(any())).thenAnswer((_) async => []);
+      when(() => mockBaseLabeler.processImage(any())).thenAnswer(
         (_) async => [
-          ImageLabel(label: 'UnknownSpecialty', confidence: 0.8, index: 0),
+          ImageLabel(label: 'Coffee', confidence: 0.95, index: 0),
+          ImageLabel(label: 'Cup', confidence: 0.85, index: 1),
         ],
       );
 
-      final result = await service.analyzeImage('dummy/path/unknown.jpg');
+      final result = await service.analyzeImage('dummy/path/coffee.jpg');
 
       expect(result, isNotNull);
-      expect(result!.primaryDishName, equals('UnknownSpecialty'));
-      expect(result.ingredients, isEmpty);
+      expect(result!.isFoodOrDrink, isTrue);
+      expect(result.category, equals(FoodCategory.drink));
+      expect(result.primaryDishName, equals('コーヒー'));
+      expect(result.candidates, contains('カフェラテ'));
+      expect(result.ingredients, contains('コーヒー豆'));
+    });
+
+    test('identifies non-food image like cat and returns non-food result', () async {
+      when(() => mockFoodLabeler.processImage(any())).thenAnswer((_) async => []);
+      when(() => mockBaseLabeler.processImage(any())).thenAnswer(
+        (_) async => [
+          ImageLabel(label: 'Cat', confidence: 0.98, index: 0),
+          ImageLabel(label: 'Pet', confidence: 0.92, index: 1),
+        ],
+      );
+
+      final result = await service.analyzeImage('dummy/path/cat.jpg');
+
+      expect(result, isNotNull);
+      expect(result!.isFoodOrDrink, isFalse);
+      expect(result.category, equals(FoodCategory.nonFood));
+      expect(result.primaryDishName, isEmpty);
+      expect(result.nonFoodDescription, equals('猫'));
+      expect(result.candidates, isEmpty);
     });
   });
 }

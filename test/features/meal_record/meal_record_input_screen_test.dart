@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meallog_ai/features/meal_record/data/food_label_mapper.dart';
 import 'package:meallog_ai/features/meal_record/data/meal_image_service.dart';
 import 'package:meallog_ai/features/meal_record/data/meal_record_model.dart';
 import 'package:meallog_ai/features/meal_record/providers/meal_image_provider.dart';
@@ -25,7 +26,7 @@ void main() {
     expect(find.text('アルバム'), findsOneWidget);
   });
 
-  testWidgets('Selecting a candidate from MealImageState pre-fills dishName TextField', (tester) async {
+  testWidgets('MealImageState displays AI determination result and does not show candidate chips', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -46,14 +47,36 @@ void main() {
     );
 
     expect(find.text('AI判定: カレーライス'), findsOneWidget);
-    expect(find.text('キーマカレー'), findsOneWidget);
+    expect(find.text('主な食材: カレールー、玉ねぎ'), findsOneWidget);
+    expect(find.text('候補から選択:'), findsNothing);
+    expect(find.text('キーマカレー'), findsNothing);
+  });
 
-    // Tap candidate chip 'キーマカレー'
-    await tester.tap(find.text('キーマカレー'));
-    await tester.pump();
+  testWidgets('Non-food result shows warning message and does not set dishName', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          historyNotifierProvider.overrideWith(() => _FakeHistory([])),
+          mealImageNotifierProvider.overrideWith(() => _FakeMealImageNotifier(
+            const MealImageState(
+              imagePath: 'cat.jpg',
+              result: MealRecognitionResult(
+                primaryDishName: '',
+                isFoodOrDrink: false,
+                category: FoodCategory.nonFood,
+                nonFoodDescription: '猫',
+              ),
+            ),
+          )),
+        ],
+        child: const MaterialApp(home: MealRecordInputScreen()),
+      ),
+    );
 
-    // Verify text field contains 'キーマカレー'
-    expect(find.widgetWithText(TextField, 'キーマカレー'), findsOneWidget);
+    expect(find.text('食事・飲み物ではないようです (猫)'), findsOneWidget);
+    expect(find.text('料理名を手動で入力してください'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '猫'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Cat'), findsNothing);
   });
 }
 
