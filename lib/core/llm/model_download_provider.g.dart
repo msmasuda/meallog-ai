@@ -7,7 +7,7 @@ part of 'model_download_provider.dart';
 // **************************************************************************
 
 String _$modelDownloadNotifierHash() =>
-    r'ec95f25b27858c0e908844a86e2ea30b8697200b';
+    r'f0bef3fe42ed1cb3c84e54cfb67f228dfcea0bf9';
 
 /// See also [ModelDownloadNotifier].
 @ProviderFor(ModelDownloadNotifier)

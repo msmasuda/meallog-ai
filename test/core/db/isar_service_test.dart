@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:meallog_ai/core/db/isar_service.dart';
-import 'package:meallog_ai/features/meal_record/data/meal_record_model.dart';
-import 'package:meallog_ai/features/suggestion/data/suggestion_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
