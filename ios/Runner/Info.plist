@@ -73,5 +73,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>食事の写真を撮影して料理名や食材を自動解析するためにカメラを使用します。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>食事の写真を選択して料理名や食材を自動解析するために写真ライブラリを使用します。</string>
 </dict>
 </plist>

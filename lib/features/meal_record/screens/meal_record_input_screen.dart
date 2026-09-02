@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/meal_record_model.dart';
+import '../providers/meal_image_provider.dart';
 import '../providers/meal_record_provider.dart';
 import '../widgets/meal_type_selector.dart';
+import '../widgets/photo_input_section.dart';
 
 class MealRecordInputScreen extends ConsumerStatefulWidget {
   const MealRecordInputScreen({super.key});
@@ -15,6 +17,7 @@ class MealRecordInputScreen extends ConsumerStatefulWidget {
 class _MealRecordInputScreenState extends ConsumerState<MealRecordInputScreen> {
   final _controller = TextEditingController();
   String _mealType = 'dinner';
+  List<String> _ingredients = [];
 
   @override
   void dispose() {
@@ -29,8 +32,10 @@ class _MealRecordInputScreenState extends ConsumerState<MealRecordInputScreen> {
       ..date = DateTime.now()
       ..mealType = _mealType
       ..dishName = dishName
+      ..ingredients = _ingredients
       ..createdAt = DateTime.now();
     await ref.read(historyNotifierProvider.notifier).add(record);
+    ref.read(mealImageNotifierProvider.notifier).clear();
     if (mounted) context.pop();
   }
 
@@ -38,11 +43,24 @@ class _MealRecordInputScreenState extends ConsumerState<MealRecordInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('献立を記録')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            PhotoInputSection(
+              onDishSelected: (dish) {
+                setState(() {
+                  _controller.text = dish;
+                });
+              },
+              onIngredientsDetected: (ingredients) {
+                setState(() {
+                  _ingredients = ingredients;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
             MealTypeSelector(
               selected: _mealType,
               onChanged: (v) => setState(() => _mealType = v),
