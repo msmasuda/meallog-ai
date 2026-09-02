@@ -6,7 +6,7 @@ part of 'meal_image_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$mealImageServiceHash() => r'3de93d3a93ab14f9b5c0f613791b4a394972b745';
+String _$mealImageServiceHash() => r'25b40040bb03dc5153eb22ba8ecc87585ea2a691';
 
 /// See also [mealImageService].
 @ProviderFor(mealImageService)
@@ -21,7 +21,7 @@ final mealImageServiceProvider = AutoDisposeProvider<MealImageService>.internal(
 );
 
 typedef MealImageServiceRef = AutoDisposeProviderRef<MealImageService>;
-String _$mealImageNotifierHash() => r'37dafc7bb1274d1a7ca9e1f371c576a2ec46bfde';
+String _$mealImageNotifierHash() => r'b2f632639ed74caded840cdc122ad39f21b5d9c0';
 
 /// See also [MealImageNotifier].
 @ProviderFor(MealImageNotifier)

@@ -1,62 +1,83 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
+import 'package:meallog_ai/core/agent/vision_api_client.dart';
 import 'package:meallog_ai/features/meal_record/data/meal_image_service.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockImageLabeler extends Mock implements ImageLabeler {}
 
 void main() {
-  setUpAll(() {
-    registerFallbackValue(InputImage.fromFilePath('test.jpg'));
-  });
-
   group('MealImageService', () {
-    late MockImageLabeler mockLabeler;
-    late MealImageService service;
-
-    setUp(() {
-      mockLabeler = MockImageLabeler();
-      service = MealImageService(labeler: mockLabeler);
-    });
-
-    test('analyzes image and returns mapped result when food labels detected', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer(
-        (_) async => [
-          ImageLabel(label: 'Curry', confidence: 0.95, index: 0),
-          ImageLabel(label: 'Rice', confidence: 0.88, index: 1),
-        ],
+    test('sends meal prompt and schema, then maps structured result', () async {
+      final client = _FakeVisionApiClient(
+        const VisionAnalyzeResponse(
+          content: {
+            'dishName': ' カレーライス ',
+            'candidates': ['キーマカレー', 'カレーライス'],
+            'ingredients': ['玉ねぎ', '人参', '玉ねぎ'],
+          },
+          model: 'vision-model',
+        ),
       );
+      final service = MealImageService(visionClient: client);
 
-      final result = await service.analyzeImage('dummy/path/curry.jpg');
+      final result = await service.analyzeImage('/tmp/meal.jpg');
 
-      expect(result, isNotNull);
-      expect(result!.primaryDishName, equals('カレーライス'));
-      expect(result.candidates, contains('カレーライス'));
-      expect(result.ingredients, contains('カレールー'));
-      expect(result.rawLabels.length, equals(2));
-      expect(result.rawLabels.first.label, equals('Curry'));
+      expect(client.imagePath, '/tmp/meal.jpg');
+      expect(client.prompt, contains('料理名'));
+      expect(client.responseSchema, MealImageService.responseSchema);
+      expect(result.primaryDishName, 'カレーライス');
+      expect(result.candidates, ['キーマカレー', 'カレーライス']);
+      expect(result.ingredients, ['玉ねぎ', '人参']);
     });
 
-    test('returns null when no labels detected', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer((_) async => []);
-
-      final result = await service.analyzeImage('dummy/path/empty.jpg');
-
-      expect(result, isNull);
-    });
-
-    test('falls back to top label when no dictionary match is found', () async {
-      when(() => mockLabeler.processImage(any())).thenAnswer(
-        (_) async => [
-          ImageLabel(label: 'UnknownSpecialty', confidence: 0.8, index: 0),
-        ],
+    test('accepts JSON string content and inserts primary candidate', () async {
+      final client = _FakeVisionApiClient(
+        const VisionAnalyzeResponse(
+          content:
+              '{"dishName":"寿司","candidates":["海鮮丼"],"ingredients":["魚","米"]}',
+          model: 'vision-model',
+        ),
       );
+      final service = MealImageService(visionClient: client);
 
-      final result = await service.analyzeImage('dummy/path/unknown.jpg');
+      final result = await service.analyzeImage('/tmp/sushi.png');
 
-      expect(result, isNotNull);
-      expect(result!.primaryDishName, equals('UnknownSpecialty'));
-      expect(result.ingredients, isEmpty);
+      expect(result.primaryDishName, '寿司');
+      expect(result.candidates, ['寿司', '海鮮丼']);
+    });
+
+    test('rejects a structured result without dishName', () async {
+      final client = _FakeVisionApiClient(
+        const VisionAnalyzeResponse(
+          content: {'candidates': <String>[], 'ingredients': <String>[]},
+          model: 'vision-model',
+        ),
+      );
+      final service = MealImageService(visionClient: client);
+
+      expect(
+        () => service.analyzeImage('/tmp/unknown.webp'),
+        throwsA(isA<VisionApiException>()),
+      );
     });
   });
+}
+
+class _FakeVisionApiClient implements VisionApiClient {
+  _FakeVisionApiClient(this.response);
+
+  final VisionAnalyzeResponse response;
+  String? imagePath;
+  String? prompt;
+  Map<String, dynamic>? responseSchema;
+
+  @override
+  Future<VisionAnalyzeResponse> analyzeImage({
+    required String imagePath,
+    required String prompt,
+    Map<String, dynamic>? responseSchema,
+    String? model,
+  }) async {
+    this.imagePath = imagePath;
+    this.prompt = prompt;
+    this.responseSchema = responseSchema;
+    return response;
+  }
 }

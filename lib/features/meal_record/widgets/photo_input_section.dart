@@ -24,7 +24,10 @@ class PhotoInputSection extends ConsumerWidget {
     if (state.imagePath == null) {
       return Card(
         elevation: 0,
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.5),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
@@ -47,7 +50,7 @@ class PhotoInputSection extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '完全端末内で安全に解析されます',
+                'ローカルネットワーク上のAIで解析します',
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -68,7 +71,8 @@ class PhotoInputSection extends ConsumerWidget {
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: () async {
-                      await notifier.pickAndAnalyze(source: ImageSource.gallery);
+                      await notifier.pickAndAnalyze(
+                          source: ImageSource.gallery);
                       _handleResult(ref);
                     },
                     icon: const Icon(Icons.photo_library, size: 18),
@@ -86,7 +90,10 @@ class PhotoInputSection extends ConsumerWidget {
     final file = File(state.imagePath!);
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      color: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
@@ -135,16 +142,18 @@ class PhotoInputSection extends ConsumerWidget {
                             SizedBox(width: 8),
                             Text(
                               'AIが料理を解析中...',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '端末内で判定しています',
+                          '画像をAIエージェントへ送信しています',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ] else if (state.result != null) ...[
@@ -172,7 +181,9 @@ class PhotoInputSection extends ConsumerWidget {
                             '主な食材: ${state.result!.ingredients.take(4).join("、")}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -197,7 +208,8 @@ class PhotoInputSection extends ConsumerWidget {
               ],
             ),
             // 候補リストがある場合の選択チップ
-            if (state.result != null && state.result!.candidates.length > 1) ...[
+            if (state.result != null &&
+                state.result!.candidates.length > 1) ...[
               const SizedBox(height: 10),
               Text(
                 '候補から選択:',
@@ -213,7 +225,8 @@ class PhotoInputSection extends ConsumerWidget {
                 runSpacing: 4,
                 children: state.result!.candidates.map((candidate) {
                   return ActionChip(
-                    label: Text(candidate, style: const TextStyle(fontSize: 12)),
+                    label:
+                        Text(candidate, style: const TextStyle(fontSize: 12)),
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       onDishSelected(candidate);
@@ -232,7 +245,8 @@ class PhotoInputSection extends ConsumerWidget {
     final state = ref.read(mealImageNotifierProvider);
     if (state.result != null) {
       onDishSelected(state.result!.primaryDishName);
-      if (state.result!.ingredients.isNotEmpty && onIngredientsDetected != null) {
+      if (state.result!.ingredients.isNotEmpty &&
+          onIngredientsDetected != null) {
         onIngredientsDetected!(state.result!.ingredients);
       }
     }

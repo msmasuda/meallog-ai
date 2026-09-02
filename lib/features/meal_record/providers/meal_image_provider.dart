@@ -1,15 +1,18 @@
 // lib/features/meal_record/providers/meal_image_provider.dart
 import 'package:image_picker/image_picker.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/agent/agent_api_provider.dart';
+import '../../../core/agent/vision_api_client.dart';
 import '../data/meal_image_service.dart';
 
 part 'meal_image_provider.g.dart';
 
 @riverpod
 MealImageService mealImageService(MealImageServiceRef ref) {
-  final service = MealImageService();
-  ref.onDispose(() => service.dispose());
-  return service;
+  return MealImageService(
+    visionClient: ref.watch(agentVisionClientProvider),
+    model: agentVisionModel,
+  );
 }
 
 class MealImageState {
@@ -80,7 +83,7 @@ class MealImageNotifier extends _$MealImageNotifier {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: '画像の解析に失敗しました',
+        errorMessage: e is VisionApiException ? e.message : '画像の解析に失敗しました',
       );
     }
   }
