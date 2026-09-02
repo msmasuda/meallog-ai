@@ -6,7 +6,7 @@ part of 'suggestion_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$mealSuggestionHash() => r'b914096aee5eed043b3c05c4b40f341888fcca24';
+String _$mealSuggestionHash() => r'5a5df837af8922203e607baefea9c5f24ab60fde';
 
 /// See also [mealSuggestion].
 @ProviderFor(mealSuggestion)
