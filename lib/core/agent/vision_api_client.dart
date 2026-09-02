@@ -40,8 +40,11 @@ class LangGraphVisionApiClient implements VisionApiClient {
               BaseOptions(
                 baseUrl: _normalizeBaseUrl(baseUrl),
                 connectTimeout: const Duration(seconds: 10),
-                receiveTimeout: const Duration(minutes: 2),
-                sendTimeout: const Duration(seconds: 30),
+                // The backend applies its own 120-second vision timeout. Keep
+                // the client timeout longer so its structured 504 response is
+                // received instead of being reported as a network failure.
+                receiveTimeout: const Duration(minutes: 3),
+                sendTimeout: const Duration(minutes: 1),
                 headers: const {'Accept': 'application/json'},
               ),
             );
@@ -124,6 +127,18 @@ class LangGraphVisionApiClient implements VisionApiClient {
     }
     if (status != null) {
       return VisionApiException('画像解析APIがエラーを返しました ($status)');
+    }
+    if (error.type == DioExceptionType.receiveTimeout) {
+      return const VisionApiException(
+        '画像解析に時間がかかりすぎました。もう一度お試しください',
+        code: 'vision_client_timeout',
+      );
+    }
+    if (error.type == DioExceptionType.connectionTimeout) {
+      return const VisionApiException(
+        '画像解析エージェントへの接続がタイムアウトしました',
+        code: 'vision_connection_timeout',
+      );
     }
     return const VisionApiException('画像解析エージェントに接続できません');
   }
