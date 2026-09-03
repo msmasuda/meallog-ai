@@ -20,6 +20,8 @@ class SuggestionScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         child: Center(
           child: suggestionAsync.when(
+            // Show progress on explicit refreshes instead of the previous result.
+            skipLoadingOnRefresh: false,
             data: (text) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
