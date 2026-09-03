@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'agent_api_client.dart';
 import 'vision_api_client.dart';
 
+// Load local settings with flutter run --dart-define-from-file=.env.
+// Physical devices must use the agent host's LAN address, not localhost.
 const agentApiBaseUrl = String.fromEnvironment(
   'AGENT_API_BASE_URL',
-  defaultValue: 'http://192.168.100.32:8000',
+  defaultValue: 'http://localhost:8000',
 );
 
 const agentApiAccessToken = String.fromEnvironment('AGENT_API_ACCESS_TOKEN');

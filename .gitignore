@@ -12,6 +12,11 @@
 .swiftpm/
 migrate_working_dir/
 
+# Local configuration (commit only the shared example)
+.env
+.env.*
+!.env.example
+
 # IntelliJ related
 *.iml
 *.ipr

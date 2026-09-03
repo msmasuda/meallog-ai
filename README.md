@@ -2,42 +2,23 @@
 
 毎日の食事を記録し、直近の履歴と重複しない次の献立をAIが提案するFlutterアプリです。
 
-食事履歴と推論処理は端末内で扱い、クラウドAPIやAPIキーを必要としません。
+食事履歴は端末内に保存し、献立提案と写真解析には外部のLangGraphエージェントを使用します。献立提案時には直近の料理名と食事種別、写真解析時には選択した画像をエージェントへ送信します。
 
 ## 主な機能
 
 - 朝食・昼食・夕食・間食の記録
+- 写真から料理名・候補・食材を解析して入力を補助
 - 日付別の献立履歴表示
 - 直近の献立を考慮した次の献立提案
 - 生成中の提案テキストをストリーミング表示
 - 提案された料理に応じたカテゴリ別イラスト表示
 - 提案の採用・再提案
 
-## AIモデル
+## AIエージェント
 
-利用可能な場合はOSが提供する端末内モデルを優先し、非対応端末ではアプリが管理するGGUFモデルへフォールバックします。
+献立提案には会話ストリーミングAPI、写真解析には汎用画像解析API（`/v1/vision/analyze`）を使用します。モデルは基本的にエージェント側で選択し、写真解析のみ`AGENT_VISION_MODEL`で指定できます。
 
-| プラットフォーム | 優先モデル | フォールバック |
-|---|---|---|
-| iOS | Apple Foundation Models | llamadart + Qwen2.5 GGUF |
-| Android | Gemini Nano（ML Kit Prompt API） | llamadart + Qwen2.5 GGUF |
-
-### iOS
-
-- Foundation ModelsはiOS 26以降かつApple Intelligence対応実機で利用します。
-- Apple Intelligenceが無効、モデル準備中、非対応端末の場合はGGUFモデルを利用します。
-- シミュレーターでは通常、GGUFモデルへフォールバックします。
-
-### Android
-
-- Gemini NanoはAndroidのAICoreを通じて利用します。
-- 対応端末では必要に応じてシステムモデルを準備します。
-- Gemini Nanoを利用できない端末ではGGUFモデルを利用します。
-- ML Kit Prompt APIの要件に合わせ、最小SDKはAPI 26です。
-
-### GGUFフォールバック
-
-初回起動時にQwen2.5-1.5B-Instruct Q4_K_M（約1GB）をダウンロードします。モデルはアプリのドキュメントディレクトリへ保存され、その後の推論はオフラインで動作します。
+現在の動作経路では端末内LLMを使用せず、GGUFモデルの初回ダウンロードも不要です。AI機能にはエージェントへのネットワーク接続が必要です。
 
 ## 開発環境
 
@@ -60,11 +41,35 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## 実行
 
+初回のみ、プロジェクト直下に手元用の設定ファイルを作成します。既に`.env`がある場合はコピーせず、そのファイルを編集してください。
+
 ```bash
-flutter run
+cp .env.example .env
 ```
 
-OS純正モデルの動作確認には、各モデルに対応した実機を使用してください。
+`.env`の`AGENT_API_BASE_URL`をエージェントの接続先に変更します。実機で使う場合は`localhost`ではなく、エージェントを動かすMacのLAN内IPアドレスまたはホスト名を指定してください。
+
+- `AGENT_API_BASE_URL`: 献立提案・画像解析共通のAPI接続先
+- `AGENT_API_ACCESS_TOKEN`: 認証が必要な場合の一時的なアクセストークン。認証なしの試験環境では空欄
+- `AGENT_VISION_MODEL`: 画像解析モデル。空欄ならエージェント側の既定モデル
+
+設定ファイルを指定して起動します（自動では読み込まれません）。
+
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+複数端末がある場合は`-d <device-id>`を追加します。ビルド時も同じ設定を指定してください。
+
+```bash
+flutter build ios --dart-define-from-file=.env
+```
+
+設定はビルド時に組み込まれます。IP変更などで`.env`を編集した後は、実行中のFlutterを停止して同じコマンドで再実行してください。ホットリロードやインストール済みアプリの開き直しだけでは反映されません。
+
+`--dart-define=KEY=value`を併用すると、その値がファイルの設定より優先されます。`AGENT_API_BASE_URL`を指定しなかった場合は、同じMacでの開発用に`http://localhost:8000`を使用します。
+
+`.env`と`.env.*`はGit管理対象外、`.env.example`のみ共有対象です。設定値はアプリのバイナリに含まれるため、Git管理対象外でも秘密を安全に保管する仕組みではありません。配布版へ固定トークンを埋め込まないでください。
 
 ## テストと静的解析
 
@@ -80,20 +85,33 @@ flutter test test/features/suggestion/suggestion_provider_test.dart
 flutter test --name "accumulates tokens"
 ```
 
+### DBテスト
+
+DB関連のテストはモックではなく、一時ディレクトリに実際のIsar DBを作成して検証します。実行後はDBを閉じ、一時データを削除します。実機の献立データは変更しません。
+
+共通の初期化処理`test/support/isar_test_support.dart`が、`flutter pub get`で取得した`isar_flutter_libs`内のホスト用バイナリを読み込みます。Mac用ライブラリをプロジェクト直下へ手動コピーしたり、テスト中に追加ダウンロードしたりする必要はありません。
+
+```bash
+flutter test test/core/db/isar_service_test.dart test/features/meal_record/meal_record_repository_test.dart
+```
+
+読み込み対象はmacOS（Apple Silicon / Intel）、Linux x64、Windows x64です。未対応の環境、ライブラリ不足、DB初期化失敗、検証結果の不一致は、スキップせずテスト失敗として扱います。ライブラリが見つからない場合は、まず`flutter pub get`が正常に完了しているか確認してください。
+
 ## プロジェクト構成
 
 ```text
 lib/
 ├── core/
 │   ├── db/          # Isar初期化
-│   ├── llm/         # 純正モデル連携、GGUFモデル、ダウンロード
-│   └── router/      # 画面遷移とモデル準備ゲート
+│   ├── agent/       # 外部エージェント接続、献立提案、画像解析
+│   ├── llm/         # 旧端末内LLM実装（現在のAI動作経路では未使用）
+│   └── router/      # 画面遷移
 └── features/
     ├── home/        # ホーム
     ├── meal_record/ # 献立記録
     ├── history/     # 履歴
     ├── suggestion/  # AI提案とカテゴリイラスト
-    └── model_setup/ # GGUFモデルの初回準備
+    └── model_setup/ # 旧GGUFモデル準備画面（現在は使用しない）
 ```
 
-状態管理にはRiverpod、ローカルデータベースにはIsarを使用しています。iOSとAndroidの純正モデルはMethodChannel経由で共通のDartサービスから呼び出します。
+状態管理にはRiverpod、ローカルデータベースにはIsar、外部エージェントとのHTTP通信にはDioを使用しています。
