@@ -1,7 +1,6 @@
 // lib/features/suggestion/screens/suggestion_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/llm/llm_provider.dart';
 import '../data/suggestion_model.dart';
 import '../providers/suggestion_provider.dart';
 import '../providers/suggestion_repo_provider.dart';
@@ -78,8 +77,7 @@ class SuggestionScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () =>
-                      ref.read(llmServiceNotifierProvider.notifier).retry(),
+                  onPressed: () => ref.invalidate(mealSuggestionProvider),
                   child: const Text('再試行'),
                 ),
               ],
